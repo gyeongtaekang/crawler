@@ -4,27 +4,40 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 require('dotenv').config();
+const { validationResult } = require('express-validator');
+const express = require('express');
+const router = express.Router();
 
 // 회원가입
-exports.register = async (req, res, next) => {
+router.post('/register', async (req, res, next) => {
   try {
     const { email, password, name } = req.body;
 
-    // 이메일 형식 및 중복 체크
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: '이미 가입된 이메일입니다.' });
+    if (!email || !password || !name) {
+      return res.status(400).json({ message: '모든 필드를 입력해주세요.' });
     }
 
-    // 비밀번호 해싱은 User 모델에서 pre-save 훅으로 처리됨
-    const user = new User({ email, password, name });
-    await user.save();
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: '이미 존재하는 이메일입니다.' });
+    }
 
-    res.status(201).json({ message: '회원가입 성공' });
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newUser = new User({
+      email,
+      password: hashedPassword,
+      name
+    });
+
+    await newUser.save();
+
+    res.status(201).json({ message: '회원가입이 완료되었습니다.' });
   } catch (error) {
     next(error);
   }
-};
+});
 
 // 로그인
 exports.login = async (req, res, next) => {
@@ -82,16 +95,4 @@ exports.updateProfile = async (req, res, next) => {
   }
 };
 
-
-const { validationResult } = require('express-validator');
-
-// 회원가입
-exports.register = async (req, res, next) => {
-  // 입력 데이터 검증 결과 확인
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
-  // 나머지 회원가입 로직...
-};
+module.exports = router;
