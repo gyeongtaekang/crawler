@@ -1,5 +1,3 @@
-// controllers/authController.js
-
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
@@ -8,8 +6,8 @@ const { validationResult } = require('express-validator');
 // 회원가입 함수
 exports.register = async (req, res, next) => {
   try {
-    // express-validator 결과 확인 (유효성 검사)
-    const errors = validationResult(req); 
+    // express-validator 결과 확인
+    const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
@@ -27,7 +25,7 @@ exports.register = async (req, res, next) => {
       return res.status(400).json({ message: '이미 존재하는 이메일입니다.' });
     }
 
-    // 비밀번호는 모델의 pre-save 훅에서 Base64 인코딩 처리
+    // 사용자 생성 및 저장
     const newUser = new User({ email, password, name });
     await newUser.save();
 
@@ -40,54 +38,49 @@ exports.register = async (req, res, next) => {
 // 로그인 함수
 exports.login = async (req, res, next) => {
   try {
-    const errors = validationResult(req); 
+    const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      console.log('Validation Errors:', errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
     const { email, password } = req.body;
-    console.log('로그인 시도:', email);
 
     // 사용자 조회
     const user = await User.findOne({ email });
     if (!user) {
-      console.log('사용자 없음:', email);
       return res.status(400).json({ message: '이메일 또는 비밀번호가 일치하지 않습니다.' });
     }
 
-    // 비밀번호 비교 (Base64 디코딩 후 평문 비교)
-    const isMatch = user.comparePassword(password);
-    console.log('비밀번호 일치 여부:', isMatch);
-
+    // 비밀번호 비교
+    const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(400).json({ message: '이메일 또는 비밀번호가 일치하지 않습니다.' });
     }
 
     // JWT 토큰 생성
-    try {
-      const payload = { id: user._id, isAdmin: user.isAdmin || false };
-      const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN });
+    const payload = { id: user._id, name: user.name, email: user.email, isAdmin: user.isAdmin || false };
+    const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN || '1h'
+    });
 
-      res.header('Authorization', `Bearer ${accessToken}`);
-      res.status(200).json({
-        message: '로그인 성공',
-        accessToken: accessToken,
-        tokenType: 'Bearer',
-        authorization: `Bearer ${accessToken}`
-      });
-    } catch (error) {
-      next(error);
-    }
+    const bearerToken = `Bearer ${accessToken}`;
+
+    res.header('Authorization', bearerToken);
+    res.status(200).json({
+      message: '로그인 성공',
+      tokenType: 'Bearer',
+      accessToken: accessToken, // Bearer가 붙지 않은 토큰
+      bearerToken: bearerToken  // Bearer가 붙은 토큰
+    });
   } catch (error) {
     next(error);
   }
 };
 
-// 비밀번호 재설정 함수
+// 비��번호 재설정 함수
 exports.resetPassword = async (req, res, next) => {
   try {
-    const errors = validationResult(req); 
+    const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
@@ -100,7 +93,7 @@ exports.resetPassword = async (req, res, next) => {
       return res.status(400).json({ message: '사용자를 찾을 수 없습니다.' });
     }
 
-    // 비밀번호 업데이트 (pre-save 훅에서 Base64 인코딩 처리)
+    // 비밀번호 업데이트
     user.password = newPassword;
     await user.save();
 
@@ -110,4 +103,66 @@ exports.resetPassword = async (req, res, next) => {
   }
 };
 
-// 기타 함수들 (refreshToken, updateProfile 등)
+// JWT 리프레시 토큰 함수
+exports.refreshToken = (req, res) => {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+    return res.status(400).json({ message: '리프레시 토큰이 필요합니다.' });
+  }
+
+  try {
+    // 리프레시 토큰 검증
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    const payload = { id: decoded.id, name: decoded.name, email: decoded.email, isAdmin: decoded.isAdmin };
+
+    // 새로운 액세스 토큰 발급
+    const newAccessToken = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN || '1h'
+    });
+
+    res.status(200).json({
+      message: '새로운 액세스 토큰이 발급되었습니다.',
+      accessToken: newAccessToken,
+    });
+  } catch (error) {
+    res.status(401).json({ message: '유효하지 않은 리프레시 토큰입니다.' });
+  }
+};
+
+// 사용자 프로필 업데이트 함수
+exports.updateProfile = async (req, res, next) => {
+  try {
+    const { name, email } = req.body;
+
+    // 사용자 조회
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+    }
+
+    // 업데이트 가능한 필드 설정
+    if (name) user.name = name;
+    if (email) user.email = email;
+
+    await user.save();
+
+    res.status(200).json({ message: '프로필이 업데이트되었습니다.', user });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// JWT 생성 함수
+exports.generateToken = (req, res) => {
+  const { id, name, email, isAdmin } = req.body;
+
+  // JWT 생성
+  const token = jwt.sign(
+    { id, name, email, isAdmin },
+    process.env.JWT_SECRET,
+    { expiresIn: '1h' }
+  );
+
+  res.json({ token });
+};

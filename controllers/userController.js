@@ -29,3 +29,29 @@ exports.deleteUser = async (req, res, next) => {
     next(error);
   }
 };
+
+module.exports = {
+  getUserInfo: (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({ message: '사용자 정보가 없습니다. 인증이 필요합니다.' });
+    }
+
+    // req.user에서 필요한 데이터 추출
+    const { id, name, email, isAdmin } = req.user;
+
+    // 사용자 정보 반환
+    res.json({
+      id,        // 사용자 ID
+      name,      // 사용자 이름
+      email,     // 사용자 이메일
+      isAdmin    // 관리자 여부
+    });
+  },
+  deleteUser: (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({ message: '사용자 정보가 없습니다. 인증이 필요합니다.' });
+    }
+
+    res.json({ message: `ID ${req.user.id} 사용자가 삭제되었습니다.` });
+  }
+};

@@ -3,15 +3,12 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
-const authMiddleware = require('../middlewares/auth');
+const auth = require('../middlewares/auth'); // auth 미들웨어 불러오기
 
-// 인증 필요
-router.use(authMiddleware());
+// 내 정보 조회
+router.get('/me', auth(), userController.getUserInfo);
 
-// 회원 정보 조회
-router.get('/profile', userController.getProfile);
-
-// 회원 탈퇴
-router.delete('/me', userController.deleteUser);
+// 계정 삭제
+router.delete('/me', auth(), userController.deleteUser);
 
 module.exports = router;
