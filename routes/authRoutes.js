@@ -14,8 +14,6 @@ router.post('/register',
   ],
   authController.register
 );
-// 로그인 라우트
-router.post('/login', authController.login);
 
 // 로그인 - 데이터 검증
 router.post('/login',
@@ -25,5 +23,14 @@ router.post('/login',
   ],
   authController.login
 );
+
+// 비밀번호 재설정 라우트 추가
+router.post('/reset-password',
+    [
+      body('email').isEmail().withMessage('유효한 이메일을 입력하세요.'),
+      body('newPassword').isLength({ min: 6 }).withMessage('비밀번호는 6자리 이상이어야 합니다.')
+    ],
+    authController.resetPassword
+  );
 
 module.exports = router;

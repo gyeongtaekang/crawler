@@ -31,10 +31,15 @@ app.use('/applications', applicationRoutes);
 app.use('/bookmarks', bookmarkRoutes);
 app.use('/notifications', notificationRoutes);
 
-// 에러 핸들러 미들웨어
-app.use(errorHandler);
+// 에러 핸들링 미들웨어
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: '서버 에러' });
+});
 
 const PORT = process.env.PORT || 443;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+module.exports = app;

@@ -1,7 +1,6 @@
 // models/User.js
 
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
 
 const UserSchema = new mongoose.Schema(
   {
@@ -27,28 +26,34 @@ const UserSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// 비밀번호 해싱 + Base64 인코딩 추가(요구사항 반영)
-// bcrypt로 해시한 후 base64로 인코딩 (추가된 요구사항 반영)
-UserSchema.pre('save', async function (next) {
+// 비밀번호를 Base64로 인코딩하여 저장
+UserSchema.pre('save', function (next) {
   try {
+    // 비밀번호가 변경된 경우에만 인코딩
     if (!this.isModified('password')) {
       return next();
     }
-    const salt = await bcrypt.genSalt(10);
-    const hashed = await bcrypt.hash(this.password, salt);
-    const base64Hashed = Buffer.from(hashed, 'utf-8').toString('base64');
-    this.password = base64Hashed;
+    // 비밀번호를 Base64로 인코딩
+    const base64Encoded = Buffer.from(this.password, 'utf-8').toString('base64');
+    this.password = base64Encoded;
+    console.log(`비밀번호 인코딩 완료: ${this.password}`);
     next();
   } catch (error) {
     next(error);
   }
 });
 
-// 비밀번호 비교 메서드 (복호화 후 bcrypt 비교)
-UserSchema.methods.comparePassword = async function (inputPassword) {
-  const hashedBase64 = this.password;
-  const hashed = Buffer.from(hashedBase64, 'base64').toString('utf-8');
-  return bcrypt.compare(inputPassword, hashed);
+// 비밀번호 비교 메서드 (Base64 디코딩 후 비교)
+UserSchema.methods.comparePassword = function (inputPassword) {
+  // DB에 저장된 비밀번호 Base64 디코딩
+  const storedBase64 = this.password;
+  const decodedPassword = Buffer.from(storedBase64, 'base64').toString('utf-8');
+
+  console.log(`디코딩된 비밀번호: ${decodedPassword}`);
+  console.log(`입력된 비밀번호: ${inputPassword}`);
+
+  // 평문 비밀번호 비교
+  return decodedPassword === inputPassword;
 };
 
 module.exports = mongoose.model('User', UserSchema);
