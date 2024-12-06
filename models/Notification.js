@@ -1,3 +1,5 @@
+// models/Notification.js
+
 const mongoose = require('mongoose');
 
 const NotificationSchema = new mongoose.Schema(
@@ -12,7 +14,6 @@ const NotificationSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    // 추가 필드 (예: 알림 유형 등)
   },
   { timestamps: true }
 );

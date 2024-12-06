@@ -1,3 +1,5 @@
+// models/Company.js
+
 const mongoose = require('mongoose');
 
 const CompanySchema = new mongoose.Schema(
@@ -10,7 +12,6 @@ const CompanySchema = new mongoose.Schema(
     location: String,
     description: String,
     website: String,
-    // 추가 회사 정보 필드
   },
   { timestamps: true }
 );

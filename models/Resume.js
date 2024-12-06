@@ -1,3 +1,5 @@
+// models/Resume.js
+
 const mongoose = require('mongoose');
 
 const ResumeSchema = new mongoose.Schema(
@@ -9,7 +11,6 @@ const ResumeSchema = new mongoose.Schema(
     },
     title: String,
     content: String,
-    // 파일 업로드를 위한 필드 등
   },
   { timestamps: true }
 );

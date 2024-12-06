@@ -5,8 +5,8 @@ const router = express.Router();
 const applicationController = require('../controllers/applicationController');
 const authMiddleware = require('../middlewares/auth');
 
-// 인증 미들웨어 적용
-router.use(authMiddleware);
+// 인증 필수
+router.use(authMiddleware());
 
 // 지원하기
 router.post('/', applicationController.applyForJob);

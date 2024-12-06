@@ -1,3 +1,5 @@
+// models/Application.js
+
 const mongoose = require('mongoose');
 
 const ApplicationSchema = new mongoose.Schema(
@@ -21,7 +23,6 @@ const ApplicationSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
-    // 추가 필드 (예: 이력서, 자기소개서 등)
   },
   { timestamps: true }
 );
