@@ -2,38 +2,48 @@
 
 const JobPosting = require('../models/JobPosting');
 
-// 채용 공고 목록 조회(검색, 필터링, 페이지네이션, 정렬)
 exports.getJobs = async (req, res, next) => {
   try {
+    // query 파라미터 받기
     const { page = 1, limit = 20, search, location, experience, sort } = req.query;
 
     const query = {};
 
-    // 검색 조건
+    // 텍스트 검색 (search 파라미터가 있으면 $text 검색)
     if (search) {
       query.$text = { $search: search };
     }
 
-    // 필터 조건
+    // 필터링 조건: location, experience 정확 일치
     if (location) {
+      // 정확히 "서울 강남구" 라고 DB에 저장되어 있다면 location=서울 강남구 로 필터링해야 함
+      // 부분 매치를 원하면:
+      // query.location = { $regex: location, $options: 'i' }; 
+      // 이렇게 하면 location이 "서울"만 넣어도 "서울 강남구" 매칭 가능
       query.location = location;
     }
+
     if (experience) {
       query.experience = experience;
     }
 
-    // 정렬 조건
+    // 정렬 조건 설정
     const sortOption = {};
     if (sort) {
+      // 지정된 필드 기준 내림차순
       sortOption[sort] = -1; 
     } else {
-      sortOption.createdAt = -1;
+      // 기본적으로 createdAt 기준 최신순
+      sortOption.createdAt = -1; 
     }
+
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
 
     const jobs = await JobPosting.find(query)
       .sort(sortOption)
-      .skip((page - 1) * limit)
-      .limit(parseInt(limit));
+      .skip((pageNum - 1) * limitNum)
+      .limit(limitNum);
 
     const total = await JobPosting.countDocuments(query);
 
@@ -41,8 +51,8 @@ exports.getJobs = async (req, res, next) => {
       status: 'success',
       data: jobs,
       pagination: {
-        currentPage: parseInt(page),
-        totalPages: Math.ceil(total / limit),
+        currentPage: pageNum,
+        totalPages: Math.ceil(total / limitNum),
         totalItems: total,
       },
     });
@@ -51,80 +61,17 @@ exports.getJobs = async (req, res, next) => {
   }
 };
 
-// 채용 공고 상세 조회
+// 상세조회 API (필요 시)
 exports.getJobById = async (req, res, next) => {
   try {
     const jobId = req.params.id;
     const job = await JobPosting.findById(jobId);
+
     if (!job) {
       return res.status(404).json({ message: '채용 공고를 찾을 수 없습니다.' });
     }
+
     res.status(200).json({ status: 'success', data: job });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// 채용 공고 등록 (관리자 전용)
-exports.createJobPosting = async (req, res, next) => {
-  try {
-    const { companyName, title, link, location, experience } = req.body;
-    const job = new JobPosting({ companyName, title, link, location, experience });
-    await job.save();
-    res.status(201).json({ message: '채용공고 등록 성공', data: job });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// 채용 공고 수정 (관리자 전용)
-exports.updateJobPosting = async (req, res, next) => {
-  try {
-    const jobId = req.params.id;
-    const updateData = req.body;
-    const job = await JobPosting.findByIdAndUpdate(jobId, updateData, { new: true });
-    if (!job) {
-      return res.status(404).json({ message: '채용 공고를 찾을 수 없습니다.' });
-    }
-    res.status(200).json({ message: '채용공고 수정 성공', data: job });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// 채용 공고 삭제 (관리자 전용)
-exports.deleteJobPosting = async (req, res, next) => {
-  try {
-    const jobId = req.params.id;
-    const job = await JobPosting.findByIdAndDelete(jobId);
-    if (!job) {
-      return res.status(404).json({ message: '채용 공고를 찾을 수 없습니다.' });
-    }
-    res.status(200).json({ message: '채용공고 삭제 성공' });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// 데이터 집계 API (예: location별 채용공고 수 집계)
-exports.getJobStats = async (req, res, next) => {
-  try {
-    const stats = await JobPosting.aggregate([
-      {
-        $group: {
-          _id: '$location',
-          count: { $sum: 1 }
-        }
-      },
-      {
-        $sort: { count: -1 }
-      }
-    ]);
-
-    res.status(200).json({
-      status: 'success',
-      data: stats
-    });
   } catch (error) {
     next(error);
   }

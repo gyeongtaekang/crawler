@@ -1,20 +1,17 @@
-// routes/applicationRoutes.js
+// routes/bookmarkRoutes.js
 
 const express = require('express');
 const router = express.Router();
-const applicationController = require('../controllers/applicationController');
+const bookmarkController = require('../controllers/bookmarkController');
 const authMiddleware = require('../middlewares/auth');
 
-// 인증 필수
+// 인증 미들웨어 적용 (올바르게 호출)
 router.use(authMiddleware());
 
-// 지원하기
-router.post('/', applicationController.applyForJob);
+// 북마크 추가/제거
+router.post('/', bookmarkController.toggleBookmark);
 
-// 지원 내역 조회
-router.get('/', applicationController.getApplications);
-
-// 지원 취소
-router.delete('/:id', applicationController.cancelApplication);
+// 북마크 목록 조회
+router.get('/', bookmarkController.getBookmarks);
 
 module.exports = router;

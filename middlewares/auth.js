@@ -1,3 +1,4 @@
+// middlewares/auth.js
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
@@ -17,8 +18,8 @@ module.exports = (requireAdmin = false) => (req, res, next) => {
     // req.user에 디코딩된 데이터 저장
     req.user = {
       id: decoded.id,
-      name: decoded.name || 'Unknown User', // 이름이 없을 경우 기본값 설정
-      email: decoded.email || 'unknown@example.com', // 이메일이 없을 경우 기본값 설정
+      name: decoded.name || 'Unknown User',
+      email: decoded.email || 'unknown@example.com',
       isAdmin: decoded.isAdmin || false
     };
 

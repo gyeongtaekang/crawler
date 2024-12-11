@@ -5,7 +5,7 @@ const router = express.Router();
 const notificationController = require('../controllers/notificationController');
 const authMiddleware = require('../middlewares/auth');
 
-// 인증 필수
+// 인증 미들웨어 적용 (올바르게 호출)
 router.use(authMiddleware());
 
 // 알림 목록 조회

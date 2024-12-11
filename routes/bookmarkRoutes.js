@@ -5,7 +5,7 @@ const router = express.Router();
 const bookmarkController = require('../controllers/bookmarkController');
 const authMiddleware = require('../middlewares/auth');
 
-// 인증 필수
+// 인증 미들웨어 적용 (올바르게 호출)
 router.use(authMiddleware());
 
 // 북마크 추가/제거
