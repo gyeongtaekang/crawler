@@ -19,10 +19,9 @@
    ```bash
    cd crawler-main
    npm install
-   npm install dotenv
    npm start
    ```
-
+   npm install dotenv은 안되면 한번 해봐도됨.
 ---
 
 ### Swagger 문서
@@ -136,6 +135,116 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
    ```
 
 ---
+
+# 기술 스택
+
+- **Database**: MongoDB
+- **Backend Framework**: Node.js (Express)
+- **API Documentation**: Swagger
+- **Authentication**: JWT
+
+
+# 폴더 구조
+
+# 📂 프로젝트 폴더 구조
+
+```plaintext
+├── 📂 node_modules           # 프로젝트 의존성 모듈 폴더 (자동 생성)
+├── 📂 src                    # 주요 소스 코드 디렉토리
+│   ├── 📂 config             # 환경 설정 및 초기화 관련 파일
+│   │   ├── 🟨 db.js         # 데이터베이스 연결 설정
+│   │   └── 🟨 swagger.js    # Swagger 설정 파일
+│   ├── 📂 controllers        # 비즈니스 로직 처리 담당 컨트롤러
+│   │   ├── 🟨 applicationController.js  # 지원서 관련 로직
+│   │   ├── 🟨 authController.js         # 인증 및 로그인 관련 로직
+│   │   ├── 🟨 bookmarkController.js     # 북마크 기능 처리
+│   │   ├── 🟨 jobController.js          # 채용 공고 관련 로직
+│   │   ├── 🟨 resumeController.js       # 이력서 관리 로직
+│   │   └── 🟨 reviewController.js       # 리뷰 처리 로직
+│   ├── 📂 middlewares         # 미들웨어 관련 파일
+│   │   ├── 🟨 authMiddleware.js        # 인증 미들웨어
+│   │   └── 🟨 responseMiddleware.js    # 공통 응답 처리 미들웨어
+│   ├── 📂 models             # 데이터베이스 모델 정의
+│   │   ├── 🟨 Application.js          # 지원서 모델
+│   │   ├── 🟨 Bookmark.js             # 북마크 모델
+│   │   ├── 🟨 Company.js              # 회사 정보 모델
+│   │   ├── 🟨 JobCategory.js          # 직업 카테고리 모델
+│   │   ├── 🟨 JobPosting.js           # 채용 공고 모델
+│   │   ├── 🟨 JobStatus.js            # 채용 상태 모델
+│   │   ├── 🟨 LoginHistory.js         # 로그인 기록 모델
+│   │   ├── 🟨 Recruiter.js            # 채용 담당자 모델
+│   │   ├── 🟨 Resume.js               # 이력서 모델
+│   │   ├── 🟨 Review.js               # 리뷰 모델
+│   │   └── 🟨 User.js                 # 사용자 모델
+│   ├── 📂 routes             # API 라우팅 파일
+│   │   ├── 🟨 applications.js        # 지원서 관련 API 라우트
+│   │   ├── 🟨 auth.js                # 인증 관련 API 라우트
+│   │   ├── 🟨 bookmarks.js           # 북마크 관련 API 라우트
+│   │   ├── 🟨 jobs.js                # 채용 공고 관련 API 라우트
+│   │   ├── 🟨 resume.js              # 이력서 관련 API 라우트
+│   │   └── 🟨 review.js              # 리뷰 관련 API 라우트
+│   ├── 📂 utils              # 유틸리티 함수 파일
+│   │   └── 🟨 pagination.js         # 페이지네이션 관련 유틸 함수
+│   └── 🟨 app.js              # Express 애플리케이션의 진입점
+├── 📄 .env                    # 환경 변수 파일
+├── 📄 .gitignore              # Git에 포함되지 않을 파일/폴더 설정
+├── 📄 crawler.log             # 로그 파일
+├── 🐍 crawler.py              # Python 크롤러 스크립트
+├── 🟨 generateToken.js        # JWT 토큰 생성 유틸리티
+├── 🟨 package.json            # 프로젝트 의존성 및 설정 파일
+├── 🟨 package-lock.json       # 의존성 잠금 파일
+└── 🟦 README.md               # 프로젝트 설명 파일
+```
+
+# API 소개
+
+## Authentication (회원 가입/로그인 관련 API)
+- **POST** `/auth/register` : 회원가입
+- **POST** `/auth/login` : 로그인
+- **GET** `/auth/me` : 사용자 정보 조회
+- **DELETE** `/auth/me` : 사용자 계정 삭제
+- **POST** `/auth/refresh` : 토큰 갱신
+- **POST** `/auth/logout` : 로그아웃
+- **PUT** `/auth/profile` : 사용자 정보 수정
+
+---
+
+## Job Postings (채용 공고 관련 API)
+- **GET** `/jobs` : 공고 목록 조회 (필터링, 정렬, 페이지네이션 지원)
+- **POST** `/jobs` : 채용 공고 등록
+- **GET** `/jobs/{id}` : 채용 공고 검색
+- **PUT** `/jobs/{id}` : 채용 공고 수정
+- **DELETE** `/jobs/{id}` : 채용 공고 삭제
+
+---
+
+## Applications (지원 관련 API)
+- **POST** `/applications` : 지원하기
+- **GET** `/applications` : 지원 내역 조회
+- **DELETE** `/applications/{id}` : 지원 취소
+- **GET** `/applications/summary` : 지원 현황 집계
+
+---
+
+## Bookmarks (북마크 관련 API)
+- **POST** `/bookmarks` : 북마크 추가
+- **DELETE** `/bookmarks` : 북마크 제거
+- **GET** `/bookmarks` : 북마크 목록 조회
+
+---
+
+## Reviews (리뷰 및 평점 관리)
+- **POST** `/reviews` : 리뷰 작성
+- **GET** `/reviews` : 리뷰 조회
+- **DELETE** `/reviews/{id}` : 리뷰 삭제
+
+---
+
+## Resumes (이력서 관련 API)
+- **POST** `/resumes` : 지원서 작성
+- **GET** `/resumes` : 지원서 조회
+- **DELETE** `/resumes/{id}` : 지원서 삭제
+
 
 ### 주의 사항
 
