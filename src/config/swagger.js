@@ -12,7 +12,7 @@ const options = {
     },
     servers: [
       {
-        url: 'http://113.198.66.75:17162',
+        url: 'http://113.198.66.75:17120',
         description: 'Production server',
       },
       // 개발 서버 추가 (선택 사항)
@@ -23,13 +23,13 @@ const options = {
     ],
     tags: [ // 태그 정의
       {
-        name: 'User Management',
-        description: '회원 관리 관련 API',
-      },
-      {
         name: 'Authentication',
         description: '회원 가입/로그인 관련 API',
       },
+      {
+        name: 'User Management',
+        description: '회원 관리 관련 API',
+      },      
       {
         name: 'Job Postings',
         description: '채용 공고 관련 API',

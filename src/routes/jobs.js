@@ -7,6 +7,7 @@ const {
   getPopularJobs,
 } = require('../controllers/jobController');
 const router = express.Router();
+
 /**
  * @swagger
  * /jobs:
@@ -45,11 +46,6 @@ const router = express.Router();
  *         schema:
  *           type: string
  *         description: 경력 필터링(신입, 1, 3, 5, 10년 이상)
- *       - in: query
- *         name: salary
- *         schema:
- *           type: integer
- *         description: 급여 정보 없음
  *       - in: query
  *         name: techStack
  *         schema:
@@ -96,6 +92,7 @@ const router = express.Router();
  */
 // 공고 목록 조회
 router.get('/', authMiddleware, getJobListings);
+
 /**
  * @swagger
  * /jobs/popular:
@@ -186,40 +183,5 @@ router.get('/popular', authMiddleware, getPopularJobs);
  */
 // 공고 상세 조회
 router.get('/:id', authMiddleware, getJobDetails);
-/**
- * @swagger
- * /jobs/summary/location:
- *   get:
- *     summary: 지역별 공고 수 조회
- *     description: 지역별로 공고 수를 집계합니다.
- *     tags: [Jobs]
- *     security:
- *       - BearerAuth: []
- *     responses:
- *       200:
- *         description: 지역별 공고 수 조회 성공
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 data:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       _id:
- *                         type: string
- *                         description: 지역명
- *                       count:
- *                         type: integer
- *                         description: 공고 수
- *       500:
- *         description: 서버 오류
- */
-// 지역별 공고 수 조회
-router.get('/summary/location', authMiddleware, getJobSummaryByLocation);
+
 module.exports = router;

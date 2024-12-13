@@ -1,6 +1,7 @@
 const JobPosting = require('../models/JobPosting');
 const { getPagination } = require('../utils/pagination');
 const Company = require('../models/Company');
+const mongoose = require('mongoose'); // 추가된 부분
 /**
  * 공고 목록 조회 (필터링, 정렬, 페이지네이션 포함)
  * @param {Object} req - Express 요청 객체
@@ -11,114 +12,51 @@ exports.getJobListings = async (req, res) => {
     page = 1,
     limit = 20,
     sort = 'createdAt',
-    region,
-    experience,
-    salary,
-    techStack,
-    keyword,
-    companyName, // 회사명 필터
-    position,
+    location, // 지역 필터
+    experience, // 경력 필터
+    techStack, // 기술 스택 필터
+    keyword, // 키워드 검색
+    company, // 회사명 필터
+    jobTitle, // 직무명 필터
   } = req.query;
 
   try {
     const filter = {};
-
-    if (region) filter.location = region;
-    if (experience) {
-      if (experience === '신입') {
-        filter.experience = '신입'; // 정확히 '신입'인 경우
-      } else {
-        const experienceLevels = ['1년 이상', '3년 이상', '5년 이상', '10년 이상'];
-        const index = experienceLevels.indexOf(experience);
-        if (index !== -1) {
-          filter.experience = { $in: experienceLevels.slice(index) }; // 선택된 조건 이상
-        }
-      }
+    if (company) {
+      filter.company = company;
     }
-    
-    if (salary) filter.salary = { $gte: parseInt(salary, 10) };
-    if (techStack) filter.techStack = { $in: techStack.split(',') };
-
-    if (keyword) {
-      filter.$or = [
-        { title: { $regex: keyword, $options: 'i' } },
-        { description: { $regex: keyword, $options: 'i' } },
-      ];
-    }
-
-    // 회사명 필터 추가
-    if (companyName) {
-      const matchingCompanies = await Company.find({ name: { $regex: companyName, $options: 'i' } }).select('_id');
-      const companyIds = matchingCompanies.map((company) => company._id);
-
-      if (companyIds.length > 0) {
-        filter.company = { $in: companyIds };
-      } else {
-        // 검색 결과가 없으면 빈 결과 반환
-        return res.status(200).json({
-          data: [],
-          pagination: {
-            currentPage: parseInt(page, 10),
-            totalPages: 0,
-            totalItems: 0,
-          },
-        });
-      }
-    }
-
-    if (position) filter.title = { $regex: position, $options: 'i' };
-
-    const { skip, limit: parsedLimit } = getPagination(page, limit);
-
-    const jobs = await JobPosting.find(filter)
-      .sort({ [sort]: 1 })
-      .skip(skip)
-      .limit(parsedLimit)
-      .populate('company', 'name'); // 회사명을 포함한 결과 반환
-
-    const total = await JobPosting.countDocuments(filter);
+    // 나머지 필터링 로직
+    const jobListings = await JobPosting.find(filter)
+      .populate('company', 'name') // 회사명 포함
+      .sort(sort)
+      .skip((page - 1) * limit)
+      .limit(limit);
 
     res.status(200).json({
-      data: jobs,
-      pagination: {
-        currentPage: parseInt(page, 10),
-        totalPages: Math.ceil(total / parsedLimit),
-        totalItems: total,
-      },
+      data: jobListings,
+      page,
+      limit,
+      total: await JobPosting.countDocuments(filter),
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
-/**
- * 공고 상세 조회 (관련 공고 포함)
- * @param {Object} req - Express 요청 객체
- * @param {Object} res - Express 응답 객체
- */
+// 공고 상세 조회 함수에서도 동일하게 수정
 exports.getJobDetails = async (req, res) => {
   const { id } = req.params;
+
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ message: 'Invalid job ID' });
   }
 
   try {
-    const job = await JobPosting.findById(id);
+    const job = await JobPosting.findById(id).populate('company', 'name');
     if (!job) {
-      return res.status(404).json({ message: 'Job posting not found' });
+      return res.status(404).json({ message: 'Job not found' });
     }
-
-    // 조회수 증가
-    job.views += 1;
-    await job.save();
-
-    // 관련 공고 추천 (같은 기술 스택 기준)
-    const relatedJobs = await JobPosting.find({
-      techStack: { $in: job.techStack },
-      _id: { $ne: id },
-    }).select('title company location techStack').limit(5);
-
-    res.status(200).json({ job, relatedJobs });
+    res.status(200).json(job);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -154,14 +92,14 @@ exports.getPopularJobs = async (req, res) => {
     const { skip, limit: parsedLimit } = getPagination(page, limit); // 페이지네이션 계산
 
     const popularJobs = await JobPosting.find({ approved: true })
-      .sort({ views: -1 })
-      .skip(skip)
-      .limit(parsedLimit);
+      .sort({ views: -1 }) // 조회수가 많은 순으로 정렬
+      .skip(skip) // 페이지네이션을 위한 skip
+      .limit(parsedLimit) // 페이지네이션을 위한 limit
+      .populate('company', 'name'); // 회사명 포함
 
     const total = await JobPosting.countDocuments({ approved: true });
 
     res.status(200).json({
-      status: 'success',
       data: popularJobs,
       pagination: {
         currentPage: parseInt(page, 10),
@@ -170,6 +108,6 @@ exports.getPopularJobs = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ status: 'error', message: 'Server error', error: error.message });
+    res.status(500).json({ message: '서버 오류', error: error.message });
   }
 };

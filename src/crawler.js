@@ -46,6 +46,7 @@ async function crawlSaramin(keyword, pages = 1) {
             const $ = cheerio.load(response.data);
 
             $('.item_recruit').each((_, el) => {
+                console.log($(el));
                 try {
                     const companyName = $(el).find('.corp_name a').text().trim();
                     const jobTitle = $(el).find('.job_tit a').text().trim();
