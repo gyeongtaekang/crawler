@@ -22,7 +22,7 @@ const authMiddleware = require('../middlewares/authMiddleware');
  *               jobId:
  *                 type: string
  *                 description: 지원할 공고의 ID
- *                 example: 64d9f2b2a3c9c2340e123456
+ *                 example: 675b1b439218ff7ac0d11a8a
  *               resume:
  *                 type: string
  *                 description: 선택적으로 제출할 이력서 파일 경로
