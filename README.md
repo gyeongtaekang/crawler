@@ -112,7 +112,7 @@ npm install swagger-jsdoc swagger-ui-express
 # 기술 스택
 
 - **Database**: MongoDB
-- **Backend Framework**: Node.js (Express)
+- **Backend Framework**: Node.js
 - **API Documentation**: Swagger
 - **Authentication**: JWT
 
