@@ -32,34 +32,7 @@
 Swagger를 사용하려면 아래 패키지를 설치해야 합니다:
 ```bash
 npm install swagger-jsdoc swagger-ui-express
-```
 
-#### Swagger 설정 방법
-`app.js` 파일에 아래 코드를 추가하여 Swagger를 설정합니다:
-```javascript
-const swaggerJsDoc = require("swagger-jsdoc");
-const swaggerUi = require("swagger-ui-express");
-
-const swaggerOptions = {
-  swaggerDefinition: {
-    openapi: "3.0.0",
-    info: {
-      title: "API Documentation",
-      version: "1.0.0",
-      description: "Crawler 프로젝트의 API 문서",
-    },
-    servers: [
-      {
-        url: "http://localhost:443",
-        description: "Local Server",
-      },
-    ],
-  },
-  apis: ["./routes/*.js"], // API 문서 경로
-};
-
-const swaggerDocs = swaggerJsDoc(swaggerOptions);
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 ```
 
 #### Swagger 문서 확인 방법
