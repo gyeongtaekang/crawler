@@ -25,11 +25,7 @@ const options = {
       {
         name: 'Authentication',
         description: '회원 가입/로그인 관련 API',
-      },
-      {
-        name: 'User Management',
-        description: '회원 관리 관련 API',
-      },      
+      },   
       {
         name: 'Job Postings',
         description: '채용 공고 관련 API',

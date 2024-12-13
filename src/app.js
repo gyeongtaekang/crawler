@@ -10,7 +10,6 @@ const bookmarkRoutes = require('./routes/bookmarks');
 const responseMiddleware = require('./middlewares/responseMiddleware');
 const adminRoutes = require('./routes/admin');
 const setupSwagger = require('./config/swagger');
-const compareRoutes = require('./routes/compare');
 const resumeRoutes = require('./routes/resume');
 const reviewRoutes = require('./routes/review');
 
@@ -36,7 +35,6 @@ app.use('/bookmarks', bookmarkRoutes);
 app.use('/admin', adminRoutes); // 관리자 API
 app.use('/resumes', resumeRoutes); 
 app.use('/reviews', reviewRoutes); 
-app.use('/compare', compareRoutes);
 
 // Test Route
 app.get('/', (req, res) => {

@@ -100,7 +100,7 @@ router.post(
  *   get:
  *     summary: 사용자 정보 조회
  *     description: 로그인된 사용자의 정보를 반환합니다.
- *     tags: [User Management]
+ *     tags: [Authentication]
  *     security:
  *       - BearerAuth: []
  *     responses:
@@ -183,7 +183,7 @@ router.post('/logout', authMiddleware, logout);
  *   put:
  *     summary: 사용자 정보 수정
  *     description: 로그인된 사용자의 프로필 정보를 수정합니다.
- *     tags: [User Management]
+ *     tags: [Authentication]
  *     security:
  *       - BearerAuth: []
  *     requestBody:
@@ -220,7 +220,7 @@ router.put('/profile', authMiddleware, updateProfile);
  *   delete:
  *     summary: 사용자 계정 삭제
  *     description: 로그인된 사용자의 계정을 삭제합니다.
- *     tags: [User Management]
+ *     tags: [Authentication]
  *     security:
  *       - BearerAuth: []
  *     responses:

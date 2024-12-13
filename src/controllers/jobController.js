@@ -1,7 +1,8 @@
 const JobPosting = require('../models/JobPosting');
 const { getPagination } = require('../utils/pagination');
 const Company = require('../models/Company');
-const mongoose = require('mongoose'); // 추가된 부분
+const mongoose = require('mongoose');
+
 /**
  * 공고 목록 조회 (필터링, 정렬, 페이지네이션 포함)
  * @param {Object} req - Express 요청 객체
@@ -22,10 +23,16 @@ exports.getJobListings = async (req, res) => {
 
   try {
     const filter = {};
-    if (company) {
-      filter.company = company;
-    }
-    // 나머지 필터링 로직
+    if (company) filter.company = company;
+    if (location) filter.location = { $regex: location, $options: 'i' };
+    if (experience) filter.experience = experience;
+    if (techStack) filter.techStack = { $in: techStack.split(',') };
+    if (keyword) filter.$or = [
+      { title: { $regex: keyword, $options: 'i' } },
+      { description: { $regex: keyword, $options: 'i' } },
+    ];
+    if (jobTitle) filter.jobTitle = { $regex: jobTitle, $options: 'i' };
+
     const jobListings = await JobPosting.find(filter)
       .populate('company', 'name') // 회사명 포함
       .sort(sort)
@@ -43,7 +50,11 @@ exports.getJobListings = async (req, res) => {
   }
 };
 
-// 공고 상세 조회 함수에서도 동일하게 수정
+/**
+ * 공고 상세 조회
+ * @param {Object} req - Express 요청 객체
+ * @param {Object} res - Express 응답 객체
+ */
 exports.getJobDetails = async (req, res) => {
   const { id } = req.params;
 
@@ -109,5 +120,66 @@ exports.getPopularJobs = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: '서버 오류', error: error.message });
+  }
+};
+
+/**
+ * 채용 공고 생성
+ * @param {Object} req - Express 요청 객체
+ * @param {Object} res - Express 응답 객체
+ */
+exports.createJobPosting = async (req, res) => { // 함수 이름 변경
+  try {
+    const job = new JobPosting(req.body);
+    await job.save();
+    res.status(201).json({ status: 'success', data: job });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: 'Server error', error: error.message });
+  }
+};
+
+/**
+ * 채용 공고 수정
+ * @param {Object} req - Express 요청 객체
+ * @param {Object} res - Express 응답 객체
+ */
+exports.updateJobPosting = async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: 'Invalid job ID' });
+  }
+
+  try {
+    const job = await JobPosting.findByIdAndUpdate(id, req.body, { new: true });
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' });
+    }
+    res.status(200).json({ status: 'success', data: job });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: 'Server error', error: error.message });
+  }
+};
+
+/**
+ * 채용 공고 삭제
+ * @param {Object} req - Express 요청 객체
+ * @param {Object} res - Express 응답 객체
+ */
+exports.deleteJobPosting = async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: 'Invalid job ID' });
+  }
+
+  try {
+    const job = await JobPosting.findByIdAndDelete(id);
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' });
+    }
+    res.status(200).json({ status: 'success', message: 'Job deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: 'Server error', error: error.message });
   }
 };
