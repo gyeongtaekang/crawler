@@ -1,6 +1,6 @@
+// controllers/jobController.js
 const JobPosting = require('../models/JobPosting');
 const { getPagination } = require('../utils/pagination');
-const Company = require('../models/Company');
 const mongoose = require('mongoose');
 
 /**
@@ -37,13 +37,17 @@ exports.getJobListings = async (req, res) => {
       .populate('company', 'name') // 회사명 포함
       .sort(sort)
       .skip((page - 1) * limit)
-      .limit(limit);
+      .limit(Number(limit));
+
+    const total = await JobPosting.countDocuments(filter);
 
     res.status(200).json({
       data: jobListings,
-      page,
-      limit,
-      total: await JobPosting.countDocuments(filter),
+      pagination: {
+        currentPage: Number(page),
+        totalPages: Math.ceil(total / limit),
+        totalItems: total,
+      },
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -74,66 +78,47 @@ exports.getJobDetails = async (req, res) => {
 };
 
 /**
- * 지역별 공고 수 조회
- * @param {Object} req - Express 요청 객체
- * @param {Object} res - Express 응답 객체
- */
-exports.getJobSummaryByLocation = async (req, res) => {
-  try {
-    const summary = await JobPosting.aggregate([
-      { $group: { _id: '$location', count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-    ]);
-
-    res.status(200).json({ status: 'success', data: summary });
-  } catch (error) {
-    res.status(500).json({ status: 'error', message: 'Server error', error: error.message });
-  }
-};
-
-/**
- * 인기 공고 조회 (페이지네이션 포함)
- * @param {Object} req - Express 요청 객체
- * @param {Object} res - Express 응답 객체
- */
-exports.getPopularJobs = async (req, res) => {
-  const { page = 1, limit = 10 } = req.query;
-
-  try {
-    const { skip, limit: parsedLimit } = getPagination(page, limit); // 페이지네이션 계산
-
-    const popularJobs = await JobPosting.find({ approved: true })
-      .sort({ views: -1 }) // 조회수가 많은 순으로 정렬
-      .skip(skip) // 페이지네이션을 위한 skip
-      .limit(parsedLimit) // 페이지네이션을 위한 limit
-      .populate('company', 'name'); // 회사명 포함
-
-    const total = await JobPosting.countDocuments({ approved: true });
-
-    res.status(200).json({
-      data: popularJobs,
-      pagination: {
-        currentPage: parseInt(page, 10),
-        totalPages: Math.ceil(total / parsedLimit),
-        totalItems: total,
-      },
-    });
-  } catch (error) {
-    res.status(500).json({ message: '서버 오류', error: error.message });
-  }
-};
-
-/**
  * 채용 공고 생성
  * @param {Object} req - Express 요청 객체
  * @param {Object} res - Express 응답 객체
  */
-exports.createJobPosting = async (req, res) => { // 함수 이름 변경
+exports.createJobPosting = async (req, res) => {
   try {
-    const job = new JobPosting(req.body);
+    const { company } = req.user; // 인증된 사용자의 회사 정보
+    console.log('Authenticated user:', req.user); // 추가된 로그
+
+    if (!company) {
+      return res.status(400).json({ status: 'error', message: 'Company information is missing.' });
+    }
+
+    const {
+      title,
+      description,
+      location,
+      experience,
+      techStack,
+      jobTitle,
+      ...otherFields
+    } = req.body;
+
+    // techStack을 배열로 변환 (쉼표로 구분된 문자열인 경우)
+    const techStackArray = typeof techStack === 'string' ? techStack.split(',').map(s => s.trim()) : techStack;
+
+    const job = new JobPosting({
+      title,
+      description,
+      location,
+      experience,
+      techStack: techStackArray,
+      jobTitle,
+      company: company._id, // 회사 ID 설정
+      ...otherFields,
+    });
+
     await job.save();
     res.status(201).json({ status: 'success', data: job });
   } catch (error) {
+    console.error('Create Job Posting Error:', error);
     res.status(500).json({ status: 'error', message: 'Server error', error: error.message });
   }
 };
@@ -151,7 +136,14 @@ exports.updateJobPosting = async (req, res) => {
   }
 
   try {
-    const job = await JobPosting.findByIdAndUpdate(id, req.body, { new: true });
+    const { _id, company, ...updateFields } = req.body;
+
+    // techStack을 배열로 변환 (필요 시)
+    if (updateFields.techStack && typeof updateFields.techStack === 'string') {
+      updateFields.techStack = updateFields.techStack.split(',').map(s => s.trim());
+    }
+
+    const job = await JobPosting.findByIdAndUpdate(id, updateFields, { new: true, runValidators: true });
     if (!job) {
       return res.status(404).json({ message: 'Job not found' });
     }

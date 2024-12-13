@@ -29,6 +29,7 @@ const router = express.Router();
  *               jobId:
  *                 type: string
  *                 description: 공고 ID
+ *                 example: "675b0f2e9218ff7ac0d115c9"
  *               rating:
  *                 type: integer
  *                 minimum: 1
@@ -37,6 +38,7 @@ const router = express.Router();
  *               comment:
  *                 type: string
  *                 description: 리뷰 내용
+ *                 example: "복지가 완전짱! 캡숑짱입니다"
  *     responses:
  *       201:
  *         description: 리뷰 작성 성공

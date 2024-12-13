@@ -6,9 +6,9 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'Job Platform API',
+      title: '강경태의 Job API 과제',
       version: '1.0.0',
-      description: 'API documentation for the Job Platform project',
+      description: '엄청 힘들었던 API 구현 과제 입니다.',
     },
     servers: [
       {
