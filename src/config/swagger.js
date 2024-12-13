@@ -8,7 +8,7 @@ const options = {
     info: {
       title: '강경태의 Job API 과제',
       version: '1.0.0',
-      description: '엄청 힘들었던 API 구현 과제 입니다.',
+      description: '힘들고 매우 험난했던 벡엔드 였습니다.',
     },
     servers: [
       {
