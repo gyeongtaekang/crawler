@@ -8,7 +8,7 @@ const jobRoutes = require('./routes/jobs');
 const applicationRoutes = require('./routes/applications');
 const bookmarkRoutes = require('./routes/bookmarks');
 const responseMiddleware = require('./middlewares/responseMiddleware');
-const setupSwagger = require('./config/swagger');
+const setupSwagger = require('./swagger');
 const resumeRoutes = require('./routes/resume');
 const reviewRoutes = require('./routes/review');
 
