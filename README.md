@@ -218,6 +218,12 @@ npm install swagger-jsdoc swagger-ui-express
 - **GET** `/resumes` : 지원서 조회
 - **DELETE** `/resumes/{id}` : 지원서 삭제
 
+## 크롤링 실행방법
+
+위치를 cd 명령어를 이용해 이동하고 해야 하지만 그냥 절대경로를 사용하겠습니다.
+
+- python3 /home/ubuntu/crawler/crawler.py
+
 
 ### 주의 사항
 
